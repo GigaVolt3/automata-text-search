@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automata Text Search</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Automata Text Search</h1>
+        <div class="search-box">
+            <div class="input-group">
+                <label for="text">Enter Text:</label>
+                <textarea id="text" rows="8" placeholder="Enter the text to search in..."></textarea>
+            </div>
+            <div class="input-group">
+                <label for="pattern">Search Pattern:</label>
+                <input type="text" id="pattern" placeholder="Enter pattern to search for...">
+            </div>
+            <button id="search-btn">Search</button>
+        </div>
+        
+        <div class="results">
+            <div class="stats">
+                <div class="stat">
+                    <h3>Search Results</h3>
+                    <p>Matches Found: <span id="match-count">0</span></p>
+                    <p>Search Time: <span id="search-time">0.0000</span> ms</p>
+                </div>
+            </div>
+            
+            <div class="output">
+                <h3>Results (highlighted in text):</h3>
+                <div id="highlighted-text" class="text-output"></div>
+            </div>
+            
+            <div class="output">
+                <h3>Match Positions:</h3>
+                <div id="match-positions" class="positions">No matches found</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('search-btn').addEventListener('click', performSearch);
+        
+        function performSearch() {
+            const text = document.getElementById('text').value;
+            const pattern = document.getElementById('pattern').value;
+            
+            if (!text || !pattern) {
+                alert('Please enter both text and pattern');
+                return;
+            }
+            
+            fetch('/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `text=${encodeURIComponent(text)}&pattern=${encodeURIComponent(pattern)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                
+                // Update stats
+                document.getElementById('match-count').textContent = data.matches.length;
+                document.getElementById('search-time').textContent = data.search_time;
+                
+                // Display highlighted text
+                document.getElementById('highlighted-text').innerHTML = data.highlighted_text || 'No matches found';
+                
+                // Display match positions
+                const positionsElement = document.getElementById('match-positions');
+                positionsElement.textContent = 
+                    data.matches.length > 0 ? data.matches.join(', ') : 'No matches found';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while performing the search');
+            });
+        }
+    </script>
+</body>
+</html>
